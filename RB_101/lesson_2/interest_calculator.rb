@@ -28,14 +28,6 @@ def input_valid?(input)
   input.to_f
 end
 
-def use_float(num)
-  if integer?(num)
-    num.to_i
-  else
-    num.to_f
-  end
-end
-
 prompt('Welcome to the interest calculator')
 prompt('Please enter a user name')
 name = ' '

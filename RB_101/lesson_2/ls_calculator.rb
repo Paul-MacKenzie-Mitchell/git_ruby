@@ -11,7 +11,7 @@ def integer?(num)
 end
 
 def float?(num)
-  num.to_f.to_s ==num
+  num.to_f.to_s == num
 end
 
 def valid_number?(num)
@@ -107,7 +107,7 @@ loop do
                prompt(MESSAGES['zero_error'])
                number2 = gets.chomp
                number2 = use_float(number2)
-             end
+            end
             number1.to_f / number2
           end
 
