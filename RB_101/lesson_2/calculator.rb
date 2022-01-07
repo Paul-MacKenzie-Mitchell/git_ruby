@@ -5,12 +5,11 @@ end
 
 # Method to test if number is an integer 0..10
 def test_num
-  test_array = %w[0 1 2 3 4 5 6 7 8 9]
   num = nil
   loop do
     prompt('Please enter an integer: ')
     num = gets.chomp
-    break unless test_array.include?(num) == false
+    break unless %w[0 1 2 3 4 5 6 7 8 9].include?(num) == false
 
     prompt('That was not a valid number')
   end
