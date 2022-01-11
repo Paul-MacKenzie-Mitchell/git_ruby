@@ -1,16 +1,24 @@
 COUNT_TO_WIN = 3
-VALID_CHOICES = %w[rock paper scissors spock lizard]
-WIN_CONDITIONS = {  'rock' => %w[scissors lizard],
-                    'paper' => %w[rock spock],
-                    'scissors' => %w[paper lizard],
-                    'spock' => %w[rock scissors],
-                    'lizard' => %w[spock paper]
+VALID_CHOICES = { 'rock' => 'r',
+                  'paper' => 'p',
+                  'scissors' => 's',
+                  'spock' => 'sp',
+                  'lizard' => 'l'
 }
 
-def prompt(message)
-  puts "\n => #{message}"
-end
+WIN_CONDITIONS = {  'rock' => %w[scissors lizard s l],
+                    'r' => %w[scissors lizard s l],
+                    'paper' => %w[rock spock r sp],
+                    'p' => %w[rock spock r sp],
+                    'scissors' => %w[paper lizard p l],
+                    's' =>  %w[paper lizard p l],
+                    'spock' => %w[rock scissors r s],
+                    'sp' => %w[rock scissors r s],
+                    'lizard' => %w[spock paper sp p],
+                    'l' => %w[spock paper sp p]
+}
 
+#conditional methods
 def answer_to_yes_or_no
   answer = gets.chomp.downcase
   continue_with_request = %w[y yes]
@@ -19,7 +27,35 @@ end
 
 def win?(player1, player2)
   WIN_CONDITIONS[player1.to_s][0] == player2 || 
-  WIN_CONDITIONS[player1.to_s][1] == player2
+  WIN_CONDITIONS[player1.to_s][1] == player2 ||
+  WIN_CONDITIONS[player1.to_s][2] == player2 ||
+  WIN_CONDITIONS[player1.to_s][3] == player2 
+end
+
+#display methods
+
+def prompt(message)
+  puts "\n => #{message}"
+end
+
+def display_unabreviated_input(input)
+  if VALID_CHOICES.has_key?(input)
+    input
+  else
+    display = case input
+              when 'r'
+                'rock'
+              when 's'
+                'scissors'
+              when 'p'
+                'paper'
+              when 'sp'
+                'spock'
+              when 'l'
+                'lizard'
+              end
+              display
+  end
 end
 
 def display_results(player, computer, round)
@@ -48,12 +84,29 @@ def display_loss_or_losses?(num)
   end
 end
 
-def display_number_of_wins(wins, losses)
-  prompt("You have #{wins} #{display_win_or_wins?(wins)} and #{losses} #{display_loss_or_losses?(losses)}")
+def display_tie_or_ties(num)
+  if num != 1
+    'ties'
+  else
+    'tie'
+  end
 end
 
+def display_number_of_wins(wins, losses, ties)
+  prompt("Your score is
+  #{wins} #{display_win_or_wins?(wins)} 
+  #{losses} #{display_loss_or_losses?(losses)}")
+  if ties != 0
+    puts("  #{ties} #{display_tie_or_ties(ties)}")
+  end
+end
+
+
+
+# Formatted messages
 rules = <<-MSG
-      Scissors cuts paper, 
+
+          Scissors cuts paper, 
           paper covers rock, 
           rock crushes lizard, 
           lizard poisons Spock, 
@@ -74,6 +127,8 @@ start_message = <<~MSG
   #{'  '}
 MSG
 
+#begin program
+
 prompt(start_message)
 prompt("Would you like to see the rules? (Y or N)")
 
@@ -90,27 +145,40 @@ loop do
   round = 1
   player_win_count = 0
   computer_win_count = 0
+  tie_count = 0
   #loops round
   loop do 
     choice = ''
     #loops choice
     loop do 
       prompt("Round #{round}!")
-      #prompt("Choose either #{VALID_CHOICES.join(', ')}")
+      prompt("Choose either #{VALID_CHOICES.keys.join(', ')} (#{VALID_CHOICES.values.join(', ')})")
+      
       choice = gets.downcase.chomp
       system "clear"
-      break if VALID_CHOICES.include?(choice)
-      prompt('That was not a valid choice')
+      if VALID_CHOICES.include?(choice)
+        break
+      elsif VALID_CHOICES.has_value?(choice)
+        break
+      else
+        prompt('That was not a valid choice')
+      end
     end
 
-    computer_choice = VALID_CHOICES.sample
-    prompt("You chose #{choice} the computer chose #{computer_choice}")
+    computer_choice = VALID_CHOICES.keys.sample.to_s
+    puts computer_choice
+    prompt("You chose #{display_unabreviated_input(choice)} the computer chose #{display_unabreviated_input(computer_choice)}")
     display_results(choice, computer_choice, round)
     
     round += 1
-    player_win_count += 1 if win?(choice, computer_choice)
-    computer_win_count += 1 if win?(computer_choice, choice)
-    display_number_of_wins(player_win_count, computer_win_count)
+    if win?(choice, computer_choice)
+      player_win_count += 1 
+    elsif win?(computer_choice, choice)
+      computer_win_count += 1 
+    else 
+      tie_count += 1
+    end
+    display_number_of_wins(player_win_count, computer_win_count, tie_count)
     
 
     if player_win_count == COUNT_TO_WIN
@@ -121,7 +189,6 @@ loop do
       break
     end
   end
-  
   
   prompt('Would you like to play again? (Y or N)')
   break unless answer_to_yes_or_no
