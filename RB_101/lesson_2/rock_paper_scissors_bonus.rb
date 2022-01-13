@@ -1,3 +1,4 @@
+require "pry"
 COUNT_TO_WIN = 3
 VALID_CHOICES = { 'rock' => 'r',
                   'paper' => 'p',
@@ -16,6 +17,21 @@ WIN_CONDITIONS = {  'rock' => %w[scissors lizard s l],
                     'lizard' => %w[spock paper sp p],
                     'l' => %w[spock paper sp p] }
 
+# input methods
+
+def input_user_choice(num, input)
+  loop do
+    prompt("Round #{num}!")
+    prompt("Choose either #{VALID_CHOICES.keys.join(', ')} (#{VALID_CHOICES.values.join(', ')})")
+    
+    input = gets.downcase.chomp
+    system 'clear'
+    return input if VALID_CHOICES.include?(input)
+    return input if VALID_CHOICES.value?(input)
+    prompt('That was not a valid choice')
+  end
+end  
+
 # conditional methods
 def answer_to_yes_or_no
   answer = gets.chomp.downcase
@@ -30,6 +46,10 @@ def win?(player1, player2)
     WIN_CONDITIONS[player1.to_s][3] == player2
 end
 
+def game_over?(count)
+  count['player_win_count'] == 3 ||
+  count['computer_win_count'] == 3
+end
 # display methods
 
 def prompt(message)
@@ -51,6 +71,19 @@ def display_results(player, computer, round)
     prompt("You lost round #{round}!")
   else
     prompt("You tied round #{round}")
+  end
+end
+
+def display_round_results(player1, player2, count)
+  if win?(player1, player2)
+    count['player_win_count'] += 1
+    count
+  elsif win?(player2, player1)
+    count['computer_win_count'] +=1
+    count
+  else
+    count['tie_count'] +=1
+    count
   end
 end
 
@@ -78,21 +111,21 @@ def display_tie_or_ties(num)
   end
 end
 
-def display_number_of_wins(wins, losses, ties)
+def display_number_of_wins(wins)
+  
   prompt("Your score is
-  #{wins} #{display_win_or_wins?(wins)}
-  #{losses} #{display_loss_or_losses?(losses)}")
-  puts("  #{ties} #{display_tie_or_ties(ties)}") if ties != 0
+  #{wins['player_win_count']} #{display_win_or_wins?(wins['player_win_count'])}
+  #{wins['computer_win_count']} #{display_loss_or_losses?(wins['computer_win_count'])}")
+  puts("  #{wins['tie_count']} #{display_tie_or_ties(wins['tie_count'])}") if wins['tie_count'] != 0
 end
 
-def display_winner(count1, count2)
-  prompt('You won the match! :)') if count1 == COUNT_TO_WIN
-  prompt('You lost the match... :(') if count2 == COUNT_TO_WIN
+def display_winner(wins)
+  prompt('You won the match! :)') if wins['player_win_count'] == COUNT_TO_WIN
+  prompt('You lost the match... :(') if wins['computer_win_count'] == COUNT_TO_WIN
 end
 
 # Formatted messages
 rules = <<-MSG
-
           Scissors cuts paper,#{' '}
           paper covers rock,#{' '}
           rock crushes lizard,#{' '}
@@ -108,7 +141,6 @@ MSG
 start_message = <<~MSG
   Welcome to 'Rock, Paper, Scissors, Spock, Lizard
   #{'  '}
-
   #{'  '}
           First to #{COUNT_TO_WIN} wins!
   #{'  '}
@@ -130,41 +162,23 @@ end
 # loops entire game
 loop do
   round = 1
-  player_win_count = 0
-  computer_win_count = 0
-  tie_count = 0
+  win_count = { 'player_win_count' => 0,
+                'computer_win_count' => 0,
+                'tie_count' => 0
+  }
   # loops round
   loop do
     choice = ''
-    # loops choice
-    loop do
-      prompt("Round #{round}!")
-      prompt("Choose either #{VALID_CHOICES.keys.join(', ')} (#{VALID_CHOICES.values.join(', ')})")
-
-      choice = gets.downcase.chomp
-      system 'clear'
-      break if VALID_CHOICES.include?(choice)
-      break if VALID_CHOICES.value?(choice)
-
-      prompt('That was not a valid choice')
-    end
-
+    choice = input_user_choice(round, choice)
     computer_choice = VALID_CHOICES.keys.sample.to_s
     prompt("You chose #{display_unabreviated_input(choice)}
     the computer chose #{display_unabreviated_input(computer_choice)}")
     display_results(choice, computer_choice, round)
-
     round += 1
-    if win?(choice, computer_choice)
-      player_win_count += 1
-    elsif win?(computer_choice, choice)
-      computer_win_count += 1
-    else
-      tie_count += 1
-    end
-    display_number_of_wins(player_win_count, computer_win_count, tie_count)
-    display_winner(player_win_count, computer_win_count)
-    break if player_win_count == 3 || computer_win_count == 3
+    win_count = display_round_results(choice, computer_choice, win_count)
+    display_number_of_wins(win_count)
+    display_winner(win_count)
+    break if game_over?(win_count)
   end
 
   prompt('Would you like to play again? (Y or N)')
