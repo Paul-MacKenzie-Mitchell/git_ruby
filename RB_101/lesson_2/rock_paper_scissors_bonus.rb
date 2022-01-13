@@ -1,4 +1,3 @@
-require "pry"
 COUNT_TO_WIN = 3
 VALID_CHOICES = { 'rock' => 'r',
                   'paper' => 'p',
@@ -23,14 +22,15 @@ def input_user_choice(num, input)
   loop do
     prompt("Round #{num}!")
     prompt("Choose either #{VALID_CHOICES.keys.join(', ')} (#{VALID_CHOICES.values.join(', ')})")
-    
+
     input = gets.downcase.chomp
     system 'clear'
     return input if VALID_CHOICES.include?(input)
     return input if VALID_CHOICES.value?(input)
+
     prompt('That was not a valid choice')
   end
-end  
+end
 
 # conditional methods
 def answer_to_yes_or_no
@@ -48,7 +48,7 @@ end
 
 def game_over?(count)
   count['player_win_count'] == 3 ||
-  count['computer_win_count'] == 3
+    count['computer_win_count'] == 3
 end
 # display methods
 
@@ -77,14 +77,12 @@ end
 def display_round_results(player1, player2, count)
   if win?(player1, player2)
     count['player_win_count'] += 1
-    count
   elsif win?(player2, player1)
-    count['computer_win_count'] +=1
-    count
+    count['computer_win_count'] += 1
   else
-    count['tie_count'] +=1
-    count
+    count['tie_count'] += 1
   end
+  count
 end
 
 def display_win_or_wins?(num)
@@ -112,7 +110,6 @@ def display_tie_or_ties(num)
 end
 
 def display_number_of_wins(wins)
-  
   prompt("Your score is
   #{wins['player_win_count']} #{display_win_or_wins?(wins['player_win_count'])}
   #{wins['computer_win_count']} #{display_loss_or_losses?(wins['computer_win_count'])}")
@@ -164,8 +161,7 @@ loop do
   round = 1
   win_count = { 'player_win_count' => 0,
                 'computer_win_count' => 0,
-                'tie_count' => 0
-  }
+                'tie_count' => 0 }
   # loops round
   loop do
     choice = ''
