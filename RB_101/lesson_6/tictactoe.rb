@@ -1,18 +1,22 @@
+# =============================================
 # Constants
+# =============================================
 WINNING_CONDITION = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] +
                     [[1, 4, 7], [2, 5, 8], [3, 6, 9]] +
                     [[1, 5, 9], [3, 5, 7]]
 
+BOARD = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+BEST_OUT_OF = 5
+# =============================================
 # Message and communication methods
+# =============================================
 def start(message)
   puts "            <-<-<->->->     #{message}     <-<-<->->->"
   puts ""
   puts ""
   prompt("If you would like to learn the rules of the game type 'rules', otherwise hit any key")
   rules
-  puts ""
-  prompt("Hit any key to continue")
-  gets.chomp
 end
 
 def rules
@@ -25,7 +29,12 @@ def rules
     puts "- The first player to get 3 of her marks in a row (up, down, across, or diagonally) is the winner."
     puts "- When all 9 squares are full, the game is over."
     sleep 2.5
+    puts ""
+    prompt("Hit any key to continue")
+    gets.chomp
   end
+   prompt("Best out of 5 wins!")
+   sleep 1
 end
 
 def prompt(message)
@@ -47,7 +56,28 @@ def joinor(valid, punctuation = ', ', word = ' or ')
   string
 end
 
+def score(player, comp, draw)
+  puts ""
+  puts "         Match Score"
+  puts '==========================='
+  puts " Player | Computer | Ties "
+  puts "========+==========+======="
+  puts "   #{player}    |     #{comp}    |   #{draw}"
+  puts ""
+  puts "Hit any key to continue"
+  gets
+  
+end
+
+# =============================================
 # Board Display methods
+# =============================================
+def initialize_board
+  board = {}
+  (1..9).each { |num| board[num] = num.to_s }
+  board
+end
+
 # rubocop:disable Metrics/AbcSize
 def display_board(brd)
   system 'clear'
@@ -67,13 +97,10 @@ def display_board(brd)
 end
 # rubocop:enable Metrics/AbcSize
 
-def initialize_board
-  board = {}
-  (1..9).each { |num| board[num] = num.to_s }
-  board
-end
-
+# =============================================
 # Choice Methods
+# =============================================
+
 def choose_x_or_o
   piece = '', computer_piece = ''
   loop do
@@ -99,7 +126,9 @@ def play_again?
   valid.none?(play_again)
 end
 
+# =============================================
 # Play Methods
+# =============================================
 def player_makes_choice!(brd, piece, valid)
   square = ''
   loop do
@@ -118,7 +147,9 @@ def computer_makes_choice!(brd, piece, valid)
   brd[square] = piece
 end
 
+# =============================================
 # Determine Winner Methods
+# =============================================
 def win?(brd, player_piece, computer_piece)
   !!who_one(brd, player_piece, computer_piece)
 end
@@ -134,27 +165,58 @@ def who_one(brd, piece1, piece2)
   nil
 end
 
+def assign_win(brd, piece1, piece2, player_wins, computer_wins)
+  if who_one(brd, piece1, piece2) == "Player Won!"
+    player_wins += 1
+  else
+    computer_wins += 1
+  end
+  return player_wins, computer_wins
+end
+
+def game_winner
+  
+end
+
+# =============================================
 # Game Start
+# =============================================
 start("Welcome to Tic Tac Toe")
+# =============================================
+# game best of 5
+# =============================================
 loop do
-  system 'clear'
-  board = initialize_board
-  valid_squares = board.keys
+  round = 0
+  player_wins = 0
+  computer_wins = 0
+  tie = 0
   player_piece, computer_piece = choose_x_or_o
-  # computer_piece = computer_x_or_o(player_piece)
+# =============================================
+# round
+# =============================================
   loop do
     system 'clear'
+    board = initialize_board
+    valid_squares = BOARD.clone
+    loop do
+      display_board(board)
+      player_makes_choice!(board, player_piece, valid_squares)
+      break if win?(board, player_piece, computer_piece) || valid_squares.empty?
+      computer_makes_choice!(board, computer_piece, valid_squares)
+      break if win?(board, player_piece, computer_piece) || valid_squares.empty?
+    end
     display_board(board)
-    player_makes_choice!(board, player_piece, valid_squares)
-    break if win?(board, player_piece, computer_piece) || valid_squares.empty?
-    computer_makes_choice!(board, computer_piece, valid_squares)
-    break if win?(board, player_piece, computer_piece) || valid_squares.empty?
-  end
-  display_board(board)
-  if win?(board, player_piece, computer_piece)
-    prompt(who_one(board, player_piece, computer_piece).to_s)
-  else
-    prompt("It was a tie...")
+    if win?(board, player_piece, computer_piece)
+      player_wins, computer_wins = assign_win(board, player_piece, computer_piece, player_wins, computer_wins)
+      prompt(who_one(board, player_piece, computer_piece))
+      score(player_wins, computer_wins, tie)
+    else
+      prompt("It was a tie...")
+      tie += 1
+      score(player_wins, computer_wins, tie)
+    end
+    valid_squares = BOARD.clone
+    game_winner
   end
   break if play_again?
 end
