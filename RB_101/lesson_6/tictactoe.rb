@@ -1,11 +1,53 @@
+# Constants
 WINNING_CONDITION = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] +
                     [[1, 4, 7], [2, 5, 8], [3, 6, 9]] +
                     [[1, 5, 9], [3, 5, 7]]
+
+# Message and communication methods
+def start(message)
+  puts "            <-<-<->->->     #{message}     <-<-<->->->"
+  puts ""
+  puts ""
+  prompt("If you would like to learn the rules of the game type 'rules', otherwise hit any key")
+  rules
+  puts ""
+  prompt("Hit any key to continue")
+  gets.chomp
+end
+
+def rules
+  choice = gets.chomp.downcase
+  if choice == 'rules' || choice == 'r'
+    puts ''
+    puts "- The game is played on a grid that's 3 squares by 3 squares."
+    puts "- Choose either X or O as your piece, your friend (or the computer in this case) is the other piece." 
+    puts "- Players take turns putting their marks in empty squares."
+    puts "- The first player to get 3 of her marks in a row (up, down, across, or diagonally) is the winner."
+    puts "- When all 9 squares are full, the game is over."
+    sleep 2.5
+  end
+end
 
 def prompt(message)
   puts "=> #{message}"
 end
 
+def joinor(valid, punctuation = ', ', word = ' or ')
+  string = ''
+  valid.each do |element|
+    case element
+    when element == valid[-1]
+      string += element.to_s
+    when element == valid[-2]
+      string += element.to_s + word
+    else
+      string += element.to_s + punctuation
+    end
+  end
+  string
+end
+
+# Board Display methods
 # rubocop:disable Metrics/AbcSize
 def display_board(brd)
   system 'clear'
@@ -31,44 +73,33 @@ def initialize_board
   board
 end
 
+# Choice Methods
 def choose_x_or_o
-  piece = ''
+  piece = '', computer_piece = ''
   loop do
     prompt("Choose either X or O as your piece")
     piece = gets.chomp.upcase
-    if piece == 'X' || piece == 'O'
+    if piece == 'X'
+      computer_piece = 'O'
+      break
+    elsif piece == 'O'
+      computer_piece = 'X'
       break
     else
       prompt("Please choose a valid option")
     end
   end
-  piece
+  return piece, computer_piece
 end
 
-def computer_x_or_o(piece)
-  if piece == 'X'
-    computer_piece = 'O'
-  elsif piece == 'O'
-    computer_piece = 'X'
-  end
-  computer_piece
+def play_again?
+  valid = ['Y', 'y', 'Yes', 'YES', 'yes']
+  prompt("Would you like to play again? Y or N")
+  play_again = gets.chomp
+  valid.none?(play_again)
 end
 
-def joinor(valid, punctuation = ', ', word = ' or ')
-  string = ''
-  valid.each do |element|
-    case element
-    when element == valid[-1]
-      string += element.to_s
-    when element == valid[-2]
-      string += element.to_s + word
-    else
-      string += element.to_s + punctuation
-    end
-  end
-  string
-end
-
+# Play Methods
 def player_makes_choice!(brd, piece, valid)
   square = ''
   loop do
@@ -87,6 +118,7 @@ def computer_makes_choice!(brd, piece, valid)
   brd[square] = piece
 end
 
+# Determine Winner Methods
 def win?(brd, player_piece, computer_piece)
   !!who_one(brd, player_piece, computer_piece)
 end
@@ -102,20 +134,14 @@ def who_one(brd, piece1, piece2)
   nil
 end
 
-def play_again?
-  valid = ['Y', 'y', 'Yes', 'YES', 'yes']
-  prompt("Would you like to play again? Y or N")
-  play_again = gets.chomp
-  valid.none?(play_again)
-end
-
+# Game Start
+start("Welcome to Tic Tac Toe")
 loop do
   system 'clear'
-  prompt("Welcome to Tic Tac Toe")
   board = initialize_board
   valid_squares = board.keys
-  player_piece = choose_x_or_o
-  computer_piece = computer_x_or_o(player_piece)
+  player_piece, computer_piece = choose_x_or_o
+  # computer_piece = computer_x_or_o(player_piece)
   loop do
     system 'clear'
     display_board(board)
