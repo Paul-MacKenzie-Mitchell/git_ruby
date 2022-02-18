@@ -1,13 +1,14 @@
+require 'yaml'
+require 'pry'
 # =============================================
 # Constants
 # =============================================
+MESSAGES = YAML.load_file('tictactoe_messages.yml')
 WINNING_CONDITION = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] +
                     [[1, 4, 7], [2, 5, 8], [3, 6, 9]] +
                     [[1, 5, 9], [3, 5, 7]]
 
 BOARD = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-
-BEST_OUT_OF = 5
 # =============================================
 # Message and communication methods
 # =============================================
@@ -15,26 +16,26 @@ def start(message)
   puts "            <-<-<->->->     #{message}     <-<-<->->->"
   puts ""
   puts ""
-  prompt("If you would like to learn the rules of the game type 'rules', otherwise hit any key")
+  prompt("If you would like to learn the rules of the game type 'rules'")
+  prompt("Otherwise hit any key to continue")
   rules
+end
+
+def hit_any_key_to_continue
+  prompt("Hit any key to continue")
+  gets.chomp
 end
 
 def rules
   choice = gets.chomp.downcase
   if choice == 'rules' || choice == 'r'
-    puts ''
-    puts "- The game is played on a grid that's 3 squares by 3 squares."
-    puts "- Choose either X or O as your piece, your friend (or the computer in this case) is the other piece." 
-    puts "- Players take turns putting their marks in empty squares."
-    puts "- The first player to get 3 of her marks in a row (up, down, across, or diagonally) is the winner."
-    puts "- When all 9 squares are full, the game is over."
+    puts MESSAGES['rules']
     sleep 2.5
     puts ""
-    prompt("Hit any key to continue")
-    gets.chomp
+    hit_any_key_to_continue
   end
-   prompt("Best out of 5 wins!")
-   sleep 1
+  prompt("The first player to win 5 games takes the match!")
+  sleep 1
 end
 
 def prompt(message)
@@ -44,14 +45,10 @@ end
 def joinor(valid, punctuation = ', ', word = ' or ')
   string = ''
   valid.each do |element|
-    case element
-    when element == valid[-1]
-      string += element.to_s
-    when element == valid[-2]
-      string += element.to_s + word
-    else
-      string += element.to_s + punctuation
-    end
+    string += element.to_s if element == valid[-1]
+    string += element.to_s + word if element == valid[-2]
+    string += element.to_s + punctuation if element != valid[-1] &&
+                                            element != valid[-2]
   end
   string
 end
@@ -64,9 +61,8 @@ def score(player, comp, draw)
   puts "========+==========+======="
   puts "   #{player}    |     #{comp}    |   #{draw}"
   puts ""
-  puts "Hit any key to continue"
-  gets
-  
+  hit_any_key_to_continue
+  BOARD.clone
 end
 
 # =============================================
@@ -132,7 +128,7 @@ end
 def player_makes_choice!(brd, piece, valid)
   square = ''
   loop do
-    prompt("Choose an open square #{joinor(valid)}")
+    prompt("Choose an open square: #{joinor(valid)}")
     square = gets.chomp.to_i
     break if valid.include?(square)
     prompt("Please choose a valid option")
@@ -174,8 +170,16 @@ def assign_win(brd, piece1, piece2, player_wins, computer_wins)
   return player_wins, computer_wins
 end
 
-def game_winner
-  
+def game_winner(player_wins, computer_wins)
+  result = nil
+  if player_wins >= 5
+    prompt("YOU WON THE MATCH !!! ")
+    result = !!player_wins
+  elsif computer_wins >= 5
+    prompt("The computer won...so sad :(")
+    result = !!computer_wins
+  end
+  result
 end
 
 # =============================================
@@ -186,14 +190,13 @@ start("Welcome to Tic Tac Toe")
 # game best of 5
 # =============================================
 loop do
-  round = 0
   player_wins = 0
   computer_wins = 0
   tie = 0
   player_piece, computer_piece = choose_x_or_o
-# =============================================
-# round
-# =============================================
+  # =============================================
+  # round
+  # =============================================
   loop do
     system 'clear'
     board = initialize_board
@@ -207,16 +210,16 @@ loop do
     end
     display_board(board)
     if win?(board, player_piece, computer_piece)
-      player_wins, computer_wins = assign_win(board, player_piece, computer_piece, player_wins, computer_wins)
+      player_wins, computer_wins = assign_win(board, player_piece,
+                                              computer_piece, player_wins,
+                                              computer_wins)
       prompt(who_one(board, player_piece, computer_piece))
-      score(player_wins, computer_wins, tie)
     else
       prompt("It was a tie...")
       tie += 1
-      score(player_wins, computer_wins, tie)
     end
-    valid_squares = BOARD.clone
-    game_winner
+    valid_squares = score(player_wins, computer_wins, tie)
+    break if game_winner(player_wins, computer_wins)
   end
   break if play_again?
 end
