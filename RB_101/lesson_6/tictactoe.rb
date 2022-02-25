@@ -115,6 +115,23 @@ def choose_x_or_o
   return piece, computer_piece
 end
 
+def select_player
+  player = ['player', 'computer']
+  prompt(MESSAGES['goes_first'])
+  loop do
+    choice = gets.chomp
+    player = 'player' if choice == '1'
+    player = 'computer' if choice == '2'
+    player = player.sample if choice == '3'
+    if %w(1 2 3).include?(choice)
+      break
+    else
+      prompt("Please choose a valid option")
+    end
+  end
+  player
+end
+
 def play_again?
   valid = ['Y', 'y', 'Yes', 'YES', 'yes']
   prompt("Would you like to play again? Y or N")
@@ -125,6 +142,21 @@ end
 # =============================================
 # Play Methods
 # =============================================
+
+def place_piece!(brd, player, p_piece, c_piece, valid)
+  if player == 'player'
+    player_makes_choice!(brd, p_piece, valid)
+  elsif player == 'computer'
+    computer_makes_choice!(brd, c_piece, p_piece, valid)
+  end
+end
+
+def alternate_player(player)
+  new_player = 'computer' if player == 'player'
+  new_player = 'player' if player == 'computer'
+  new_player
+end
+
 def player_makes_choice!(brd, piece, valid)
   square = ''
   loop do
@@ -186,7 +218,13 @@ def assign_win(brd, piece1, piece2, player_wins, computer_wins)
   else
     computer_wins += 1
   end
+  prompt(who_one(brd, piece1, piece2))
   return player_wins, computer_wins
+end
+
+def tie_result
+  prompt("It was a tie...")
+  1
 end
 
 def game_winner(player_wins, computer_wins)
@@ -206,25 +244,27 @@ end
 # =============================================
 start("Welcome to Tic Tac Toe")
 # =============================================
-# game best of 5
+# game first to 5
 # =============================================
 loop do
   player_wins = 0
   computer_wins = 0
   tie = 0
   player_piece, computer_piece = choose_x_or_o
+  who_goes_first = select_player
   # =============================================
   # round
   # =============================================
   loop do
+    current_player = who_goes_first
     system 'clear'
     board = initialize_board
     valid_squares = BOARD.clone
     loop do
       display_board(board)
-      player_makes_choice!(board, player_piece, valid_squares)
-      break if win?(board, player_piece, computer_piece) || valid_squares.empty?
-      computer_makes_choice!(board, computer_piece, player_piece, valid_squares)
+      place_piece!(board, current_player, player_piece,
+                   computer_piece, valid_squares)
+      current_player = alternate_player(current_player)
       break if win?(board, player_piece, computer_piece) || valid_squares.empty?
     end
     display_board(board)
@@ -232,12 +272,10 @@ loop do
       player_wins, computer_wins = assign_win(board, player_piece,
                                               computer_piece, player_wins,
                                               computer_wins)
-      prompt(who_one(board, player_piece, computer_piece))
     else
-      prompt("It was a tie...")
-      tie += 1
+      tie += tie_result
     end
-    valid_squares = score(player_wins, computer_wins, tie)
+    score(player_wins, computer_wins, tie)
     break if game_winner(player_wins, computer_wins)
   end
   break if play_again?
