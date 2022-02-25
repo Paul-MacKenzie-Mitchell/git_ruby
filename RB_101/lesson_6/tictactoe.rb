@@ -137,15 +137,34 @@ def player_makes_choice!(brd, piece, valid)
   brd[square] = piece
 end
 
-def computer_makes_choice!(brd, piece, valid)
-  square = valid.sample
+def computer_makes_choice!(brd, c_piece, p_piece, valid)
+  square = nil
+  square = 5 if valid.include?(5)
+  if find_at_risk_square(brd, c_piece, valid)
+    square = find_at_risk_square(brd, c_piece, valid)[0]
+  end
+  if square.nil? && find_at_risk_square(brd, p_piece, valid)
+    square = find_at_risk_square(brd, p_piece, valid)[0]
+  end
+  square = valid.sample if square.nil?
   valid.delete(square)
-  brd[square] = piece
+  brd[square] = c_piece
+end
+
+def find_at_risk_square(brd, piece, valid)
+  square = nil
+  WINNING_CONDITION.each do |line|
+    if brd.values_at(*line).count(piece) == 2
+      square = valid.select { |num| line.include?(num) }
+    end
+  end
+  square
 end
 
 # =============================================
 # Determine Winner Methods
 # =============================================
+
 def win?(brd, player_piece, computer_piece)
   !!who_one(brd, player_piece, computer_piece)
 end
@@ -205,7 +224,7 @@ loop do
       display_board(board)
       player_makes_choice!(board, player_piece, valid_squares)
       break if win?(board, player_piece, computer_piece) || valid_squares.empty?
-      computer_makes_choice!(board, computer_piece, valid_squares)
+      computer_makes_choice!(board, computer_piece, player_piece, valid_squares)
       break if win?(board, player_piece, computer_piece) || valid_squares.empty?
     end
     display_board(board)
