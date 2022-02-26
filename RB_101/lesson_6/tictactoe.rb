@@ -97,21 +97,21 @@ end
 # =============================================
 
 def choose_x_or_o
-  piece = '', computer_piece = ''
+  p_piece = '', c_piece = ''
   loop do
     prompt("Choose either X or O as your piece")
-    piece = gets.chomp.upcase
-    if piece == 'X'
-      computer_piece = 'O'
+    p_piece = gets.chomp.upcase
+    if p_piece == 'X'
+      c_piece = 'O'
       break
-    elsif piece == 'O'
-      computer_piece = 'X'
+    elsif p_piece == 'O'
+      c_piece = 'X'
       break
     else
       prompt("Please choose a valid option")
     end
   end
-  return piece, computer_piece
+  return p_piece, c_piece
 end
 
 def select_player
@@ -196,8 +196,8 @@ end
 # Determine Winner Methods
 # =============================================
 
-def win?(brd, player_piece, computer_piece)
-  !!who_one(brd, player_piece, computer_piece)
+def win?(brd, p_piece, c_piece)
+  !!who_one(brd, p_piece, c_piece)
 end
 
 def who_one(brd, piece1, piece2)
