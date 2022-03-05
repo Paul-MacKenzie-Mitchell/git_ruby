@@ -1,14 +1,16 @@
 require 'pry'
 
 DECK = { 'Spades': [ {'2': 2}, {'3': 3}, {'4': 4}, {'5': 5}, {'6': 6}, {'7': 7}, {'8': 8}, {'9': 9}, 
-                   {'10': 10}, {'Jack': 10}, {'Queen': 10}, {'King': 10}, {'Ace': [1,11]} ],
+                   {'10': 10}, {'Jack': 10}, {'Queen': 10}, {'King': 10}, {'Ace': 11} ],
         'Clubs': [ {'2': 2}, {'3': 3}, {'4': 4}, {'5': 5}, {'6': 6}, {'7': 7}, {'8': 8}, {'9': 9}, 
-                  {'10': 10}, {'Jack': 10}, {'Queen': 10}, {'King': 10}, {'Ace': [1,11]} ],
+                  {'10': 10}, {'Jack': 10}, {'Queen': 10}, {'King': 10}, {'Ace': 11} ],
         'Hearts': [ {'2': 2}, {'3': 3}, {'4': 4}, {'5': 5}, {'6': 6}, {'7': 7}, {'8': 8}, {'9': 9}, 
-                  {'10': 10}, {'Jack': 10}, {'Queen': 10}, {'King': 10}, {'Ace': [1,11]} ],
+                  {'10': 10}, {'Jack': 10}, {'Queen': 10}, {'King': 10}, {'Ace': 11} ],
         'Diamonds': [ {'2': 2}, {'3': 3}, {'4': 4}, {'5': 5}, {'6': 6}, {'7': 7}, {'8': 8}, {'9': 9}, 
-                  {'10': 10}, {'Jack': 10}, {'Queen': 10}, {'King': 10}, {'Ace': [1,11]} ]
+                  {'10': 10}, {'Jack': 10}, {'Queen': 10}, {'King': 10}, {'Ace': 11} ]
         }
+
+HIT_OR_STAY = %w[HIT STAY H S]
 
 # =======================================
 #  Initialization Methods
@@ -43,7 +45,8 @@ def display_player_hand(hand, ender = '.', punct = ', ', joiner = ' and ')
     string += card + punct if card != cards[-1] &&
                               card != cards[-2]
   end
-  puts string
+  prompt(string)
+  prompt("Your hand is worth #{hand_value(hand)} points.")
 end
 
 def display_dealer_hand(hand, ender = '.', punct = ', ', joiner = ' and ')
@@ -58,7 +61,8 @@ def display_dealer_hand(hand, ender = '.', punct = ', ', joiner = ' and ')
                               card != cards[-2] &&
                               card != cards[0]
   end
-  puts string
+  prompt(string)
+  puts ""
 end
 
 # =======================================
@@ -66,7 +70,15 @@ end
 # =======================================
 
 def deal_card_to_player?(deck, hand)
-
+  answer = ''
+  prompt("Would you like to hit or stay?")
+  loop do
+    answer = gets.chomp.upcase
+    break if HIT_OR_STAY.include?(answer)
+    prompt("Please enter a valid answer...")
+  end
+  deal_one_card(deck, hand) if answer == "HIT" || answer == "H"
+  
 end
 
 def deal_card_to_dealer?(deck, d_hand, p_hand)
@@ -97,6 +109,7 @@ end
 def deal_one_card(deck, hand)
   card = select_card(deck)
   hand << card
+  display_player_hand(hand)
 end
 
 # =======================================
@@ -104,6 +117,25 @@ end
 # =======================================
 
 def hand_value(hand)
+  value = 0
+  hand.each do |card|
+    value += card[0].values[0]
+  end
+  # puts "yes" if check_for_ace(hand)
+  # puts "no" if !check_for_ace(hand)
+  return value if value <= 21
+  value -= 10 if check_for_ace(hand)
+  return value
+end
+
+def check_for_ace(hand)
+  ace = false
+  hand.each do |card|
+    ace = true if card[0] == {'Ace': 11}
+  end
+  ace
+end
+
 
 # =======================================
 # Game Win Methods
@@ -119,10 +151,12 @@ end
 current_deck = initialize_deck
 player_hand = initial_deal(current_deck)
 dealer_hand = initial_deal(current_deck)
+display_dealer_hand(dealer_hand)
 display_player_hand(player_hand)
-deal_one_card(current_deck, player_hand)
 
-
+loop do
+  deal_card_to_player?(current_deck, player_hand)
+end
 
 
 
