@@ -11,11 +11,54 @@ DECK = { 'Spades': [ {'2': 2}, {'3': 3}, {'4': 4}, {'5': 5}, {'6': 6}, {'7': 7},
         }
 
 # =======================================
-# Game Display and Initialization Methods
+#  Initialization Methods
 # =======================================
 
 def initialize_deck
   DECK.clone
+end
+
+# =======================================
+#  Display Methods
+# =======================================
+
+def prompt(message)
+  puts "=> #{message}"
+end
+
+def convert_hand_to_string(hand)
+  cards = []
+  hand.each do |array| 
+    cards << "the #{array[0].keys[0]} of #{array[1]}"
+  end
+  cards
+end
+
+def display_player_hand(hand, ender = '.', punct = ', ', joiner = ' and ')
+  string = 'Your hand inludes '
+  cards = convert_hand_to_string(hand)
+  cards.each do |card|
+    string += card + ender if card == cards[-1]
+    string += card + joiner if card == cards[-2]
+    string += card + punct if card != cards[-1] &&
+                              card != cards[-2]
+  end
+  puts string
+end
+
+def display_dealer_hand(hand, ender = '.', punct = ', ', joiner = ' and ')
+  string = 'The dealers hand inludes '
+  cards = convert_hand_to_string(hand)
+  cards.each do |card|
+    string += "an unknown card" if card == cards[0]
+    string += joiner + card + ender if card == cards[-1]
+    string += punct + card if card == cards[-2] &&
+                               card != cards[0]
+    string += punct + card if card != cards[-1] &&
+                              card != cards[-2] &&
+                              card != cards[0]
+  end
+  puts string
 end
 
 # =======================================
@@ -35,33 +78,32 @@ end
 # =======================================
 
 def initial_deal(deck)
-  player_cards = []
-  dealer_cards = []
-  2.times do |card, suite| card, suite = select_card(deck)
-    player_cards << suite
-    player_cards << card
+  cards = []
+  2.times do |card| card = select_card(deck)
+    cards << card
   end
-  2.times do |card, suite| card, suite = select_card(deck)
-    dealer_cards << suite
-    dealer_cards << card
-  end
-  return player_cards, dealer_cards
+  cards
 end
 
 def select_card(deck)
   card = []
   suite = deck.keys.sample
-  deck[suite].each_with_index { |element, index| card << [element, index] }
+  deck[suite].each { |element| card << [element] }
   card = card.sample
   deck[suite].delete(card[0])
-  return card[0], suite
+  card = card[0], suite
 end
   
-def deal_one_card(deck)
-  card = []
-  card, suite = select_card(deck)
-  card
+def deal_one_card(deck, hand)
+  card = select_card(deck)
+  hand << card
 end
+
+# =======================================
+# Hand Value Methods
+# =======================================
+
+def hand_value(hand)
 
 # =======================================
 # Game Win Methods
@@ -75,7 +117,13 @@ end
 # =======================================
 
 current_deck = initialize_deck
-player_hand, dealer_hand = initial_deal(current_deck)
+player_hand = initial_deal(current_deck)
+dealer_hand = initial_deal(current_deck)
+display_player_hand(player_hand)
+deal_one_card(current_deck, player_hand)
+
+
+
 
 
 # p card = initial_deal(current_deck)
