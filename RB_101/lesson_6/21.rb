@@ -47,6 +47,8 @@ def display_player_hand(hand, ender = '.', punct = ', ', joiner = ' and ')
   end
   prompt(string)
   prompt("Your hand is worth #{hand_value(hand)} points.")
+  prompt("YOU BUSTED!") if bust?(hand)
+  puts ""
 end
 
 def display_dealer_hand(hand, ender = '.', punct = ', ', joiner = ' and ')
@@ -62,27 +64,44 @@ def display_dealer_hand(hand, ender = '.', punct = ', ', joiner = ' and ')
                               card != cards[0]
   end
   prompt(string)
+  prompt("The dealer busted!") if bust?(hand)
   puts ""
 end
 
+def display_winner(p_hand, d_hand)
+  winner = who_won?(p_hand, d_hand)
+  prompt("You Won!") if winner == "Player"
+  prompt("The Dealer Won...") if winner =="Dealer"
+  prompt("It was a tie...") if winner == "Tie"
+end
 # =======================================
 # Game Choice Methods
 # =======================================
 
 def deal_card_to_player?(deck, hand)
   answer = ''
-  prompt("Would you like to hit or stay?")
   loop do
-    answer = gets.chomp.upcase
-    break if HIT_OR_STAY.include?(answer)
-    prompt("Please enter a valid answer...")
+    prompt("Would you like to hit or stay?")
+    loop do
+      answer = gets.chomp.upcase
+      break if HIT_OR_STAY.include?(answer)
+      prompt("Please enter a valid answer...")
+    end
+    deal_one_card(deck, hand) if answer == "HIT" || answer == "H"
+    break if answer == "STAY" || answer == "S"
+    display_player_hand(hand)
+    break if bust?(hand)
   end
-  deal_one_card(deck, hand) if answer == "HIT" || answer == "H"
-  
+  answer
 end
 
 def deal_card_to_dealer?(deck, d_hand, p_hand)
-  
+  loop do
+    break if bust?(p_hand)
+    break if hand_value(d_hand) >= 17
+    deal_one_card(deck, d_hand)
+    display_dealer_hand(hand)
+  end
 end
 
 # =======================================
@@ -109,7 +128,6 @@ end
 def deal_one_card(deck, hand)
   card = select_card(deck)
   hand << card
-  display_player_hand(hand)
 end
 
 # =======================================
@@ -141,7 +159,16 @@ end
 # Game Win Methods
 # =======================================
 def bust?(hand)
-  
+  return true if hand_value(hand) > 21
+  false
+end
+
+def who_won?(p_hand, d_hand)
+  return "Dealer" if bust?(p_hand)
+  return "Player" if bust?(d_hand)
+  return "Player" if p_hand > d_hand
+  return "Dealer" if d_hand > p_hand
+  return "Tie" if d_hand == p_hand
 end
 
 # =======================================
@@ -153,23 +180,7 @@ player_hand = initial_deal(current_deck)
 dealer_hand = initial_deal(current_deck)
 display_dealer_hand(dealer_hand)
 display_player_hand(player_hand)
-
-loop do
-  deal_card_to_player?(current_deck, player_hand)
-end
-
-
-
-# p card = initial_deal(current_deck)
-
-# p suite = current_deck.keys.sample
-# current_deck[suite]
-# card = []
-# current_deck[suite].each_with_index do |element, index|
-#   card << [element, index]  
-# end
-# p card = card.sample
-
-# # current_deck.delete(current_deck[suite][card[1]])
-# current_deck[suite].delete(card[0])
-# p current_deck
+deal_card_to_player?(current_deck, player_hand)
+deal_card_to_dealer?(current_deck, dealer_hand, player_hand)
+display_winner(player_hand, dealer_hand)
+puts "Done!"
