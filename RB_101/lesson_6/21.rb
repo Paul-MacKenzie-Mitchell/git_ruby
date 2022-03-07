@@ -52,10 +52,11 @@ def display_player_hand(hand, ender = '.', punct = ', ', joiner = ' and ')
 end
 
 def display_dealer_hand(hand, ender = '.', punct = ', ', joiner = ' and ')
+  unknown = "an unknown card"
   string = 'The dealers hand inludes '
   cards = convert_hand_to_string(hand)
   cards.each do |card|
-    string += "an unknown card" if card == cards[0]
+    string += unknown if card == cards[0]
     string += joiner + card + ender if card == cards[-1]
     string += punct + card if card == cards[-2] &&
                                card != cards[0]
@@ -100,8 +101,8 @@ def deal_card_to_dealer?(deck, d_hand, p_hand)
     break if bust?(p_hand)
     break if hand_value(d_hand) >= 17
     deal_one_card(deck, d_hand)
-    display_dealer_hand(hand)
   end
+  display_dealer_hand(d_hand)
 end
 
 # =======================================
@@ -128,6 +129,8 @@ end
 def deal_one_card(deck, hand)
   card = select_card(deck)
   hand << card
+  system 'clear'
+  prompt("The #{card[0].keys[0]} of #{card[1]} was dealt.")
 end
 
 # =======================================
@@ -139,19 +142,22 @@ def hand_value(hand)
   hand.each do |card|
     value += card[0].values[0]
   end
-  # puts "yes" if check_for_ace(hand)
-  # puts "no" if !check_for_ace(hand)
   return value if value <= 21
   value -= 10 if check_for_ace(hand)
   return value
 end
 
+def ace_values(hand)
+  
+end
+
 def check_for_ace(hand)
-  ace = false
+  ace = 0
   hand.each do |card|
-    ace = true if card[0] == {'Ace': 11}
+    ace += 1 if card[0] == {'Ace': 11}
   end
-  ace
+  return false if ace == 0
+  return ace 
 end
 
 
@@ -166,9 +172,9 @@ end
 def who_won?(p_hand, d_hand)
   return "Dealer" if bust?(p_hand)
   return "Player" if bust?(d_hand)
-  return "Player" if p_hand > d_hand
-  return "Dealer" if d_hand > p_hand
-  return "Tie" if d_hand == p_hand
+  return "Player" if hand_value(p_hand) > hand_value(d_hand)
+  return "Dealer" if hand_value(d_hand) > hand_value(p_hand)
+  return "Tie" if hand_value(d_hand) == hand_value(p_hand)
 end
 
 # =======================================
