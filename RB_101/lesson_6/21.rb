@@ -30,7 +30,7 @@ STAY = %w(STAY S)
 
 def initialize_deck
   system 'clear'
-  Marshal.load( Marshal.dump(DECK))
+  Marshal.load(Marshal.dump(DECK))
 end
 
 # =======================================
@@ -260,11 +260,11 @@ def add_win_count(winner, p_win, d_win, draw)
   elsif winner == "Dealer"
     d_win += 1
   else
-    draw +=1
+    draw += 1
   end
   return p_win, d_win, draw
 end
- 
+
 # =======================================
 # Game Play Methods
 # =======================================
@@ -284,32 +284,31 @@ def round(current_deck)
   round_winner
 end
 
-# working on this.  Add a counter that retuns from round method
-def game
-  welcome
-  loop do 
-    player_win = 0
-    dealer_win = 0
-    tie = 0
-    loop do
-      current_deck = initialize_deck
-      round_winner = round(current_deck)
-      player_win, dealer_win, tie = add_win_count(round_winner, player_win, dealer_win, tie)
-      score(player_win, dealer_win, tie)
-      if player_win == 5
-        prompt("YOU WON THE MATCH!!!")
-        break
-      elsif dealer_win == 5
-        prompt("You lost the match...so sad :(")
-        break
-      end
-    end
-    break if !play_again?
-  end
-  prompt("Thanks for playing")
-end
 # =======================================
-# Game Play 
+# Game Play
 # =======================================
 
-game
+welcome
+loop do
+  player_win = 0
+  dealer_win = 0
+  tie = 0
+  loop do
+    current_deck = initialize_deck
+    round_winner = round(current_deck)
+    player_win, dealer_win, tie = add_win_count(round_winner,
+                                                player_win,
+                                                dealer_win,
+                                                tie)
+    score(player_win, dealer_win, tie)
+    if player_win == 5
+      prompt("YOU WON THE MATCH!!!")
+      break
+    elsif dealer_win == 5
+      prompt("You lost the match...so sad :(")
+      break
+    end
+  end
+  break if !play_again?
+end
+prompt("Thanks for playing")
