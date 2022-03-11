@@ -18,6 +18,7 @@ DECK = { 'Spades': [{ '2': 2 }, { '3': 3 }, { '4': 4 }, { '5': 5 },
                       { '6': 6 }, { '7': 7 }, { '8': 8 }, { '9': 9 },
                       { '10': 10 }, { 'Jack': 10 }, { 'Queen': 10 },
                       { 'King': 10 }, { 'Ace': 11 }] }
+
 MAX_PLAYABLE_VALUE = 21
 DEALER_LIMIT = 17
 CHOICE = %w(HIT STAY H S)
@@ -76,7 +77,7 @@ def convert_hand_to_string(hand)
   cards
 end
 
-def display_player_hand(hand)
+def display_player_hand(hand, value)
   string = 'Your hand inludes '
   cards = convert_hand_to_string(hand)
   cards.each do |card|
@@ -89,12 +90,12 @@ def display_player_hand(hand)
               end
   end
   prompt(string)
-  prompt("Your hand is worth #{hand_value(hand)} points.")
-  prompt("YOU BUSTED!") if bust?(hand)
+  prompt("Your hand is worth #{value} points.") # hand value
+  prompt("YOU BUSTED!") if bust?(value)
   puts ""
 end
 
-def format_display_dealer_hand(hand, hide_card)
+def format_display_dealer_hand(hand, hide_card, value)
   string = 'The dealers hand inludes '
   cards = convert_hand_to_string(hand)
   variable = "the hole card" if hide_card
@@ -108,13 +109,13 @@ def format_display_dealer_hand(hand, hide_card)
                 ', ' + card
               end
   end
-  display_dealer_hand(hand, hide_card, string)
+  display_dealer_hand(hand, hide_card, string, value)
 end
 
-def display_dealer_hand(hand, hide_card, string)
+def display_dealer_hand(_hand, hide_card, string, value)
   prompt(string)
-  prompt(MESSAGES['dealer'] + "#{hand_value(hand)} points.") if !hide_card
-  prompt("The dealer busted!") if bust?(hand)
+  prompt(MESSAGES['dealer'] + "#{value} points.") if !hide_card
+  prompt("The dealer busted!") if bust?(value)
   puts ""
 end
 
@@ -149,25 +150,31 @@ def ask_to_deal_card(answer)
   answer
 end
 
-def deal_card_to_player?(deck, hand)
+def deal_card_to_player?(deck, hand, value)
   answer = ''
   loop do
     answer = ask_to_deal_card(answer)
     deal_one_card(deck, hand) if HIT.include?(answer)
-    display_player_hand(hand)
+    value = hand_value(hand)
+    display_player_hand(hand, value)
     chose_to_stay if STAY.include?(answer)
-    break if STAY.include?(answer) || bust?(hand)
+    break if STAY.include?(answer) || bust?(value)
   end
+  return value, false
 end
 
-def deal_card_to_dealer?(deck, d_hand, p_hand, hide_card)
+def deal_card_to_dealer?(deck, d_hand, d_value, p_value, hide_card)
   loop do
-    break if bust?(p_hand)
-    prompt("The Dealer stays") if  hand_value(d_hand) >= DEALER_LIMIT
-    break if hand_value(d_hand) >= DEALER_LIMIT
+    break if bust?(p_value)
+    break if bust?(d_value)
+    prompt("The Dealer stays") if d_value >= DEALER_LIMIT &&
+                                  !bust?(p_value)
+    break if d_value >= DEALER_LIMIT
     deal_one_card(deck, d_hand)
+    d_value = hand_value(d_hand)
   end
-  format_display_dealer_hand(d_hand, hide_card)
+  format_display_dealer_hand(d_hand, hide_card, d_value)
+  d_value
 end
 
 def chose_to_stay
@@ -193,7 +200,7 @@ def initial_deal(deck)
     card = select_card(deck)
     cards << card
   end
-  cards
+  return cards, true
 end
 
 def select_card(deck)
@@ -208,8 +215,8 @@ end
 def deal_one_card(deck, hand)
   card = select_card(deck)
   hand << card
-  system 'clear'
   prompt("The #{card[0].keys[0]} of #{card[1]} was dealt.")
+  card
 end
 
 # =======================================
@@ -221,37 +228,40 @@ def hand_value(hand)
   hand.each do |card|
     value += card[0].values[0]
   end
+  ace_num = ace_count(hand)
   return value if value <= MAX_PLAYABLE_VALUE
-  value -= 10 if check_for_ace(hand)
+  loop do
+    if ace_num > 0
+      value -= 10
+      ace_num -= 1
+    end
+    break if value <= MAX_PLAYABLE_VALUE || ace_num == 0
+  end
   value
 end
 
-def ace_values(hand); end
-
-def check_for_ace(hand)
+def ace_count(hand)
   ace = 0
   hand.each do |card|
     ace += 1 if card[0] == { 'Ace': 11 }
   end
-  return false if ace == 0
   ace
 end
-
 # =======================================
 # Game Win Methods
 # =======================================
 
-def bust?(hand)
-  return true if hand_value(hand) > MAX_PLAYABLE_VALUE
+def bust?(value)
+  return true if value > MAX_PLAYABLE_VALUE # hand value
   false
 end
 
-def who_won?(p_hand, d_hand)
+def who_won?(p_hand, d_hand) # hand value
   return "Dealer" if bust?(p_hand)
   return "Player" if bust?(d_hand)
-  return "Player" if hand_value(p_hand) > hand_value(d_hand)
-  return "Dealer" if hand_value(d_hand) > hand_value(p_hand)
-  return "Tie" if hand_value(d_hand) == hand_value(p_hand)
+  return "Player" if p_hand > d_hand
+  return "Dealer" if d_hand > p_hand
+  return "Tie" if d_hand == p_hand
 end
 
 def add_win_count(winner, p_win, d_win, draw)
@@ -270,16 +280,19 @@ end
 # =======================================
 
 def round(current_deck)
-  hide_card = true
-  # current_deck = initialize_deck
-  player_hand = initial_deal(current_deck)
-  dealer_hand = initial_deal(current_deck)
-  format_display_dealer_hand(dealer_hand, hide_card)
-  display_player_hand(player_hand)
-  deal_card_to_player?(current_deck, player_hand)
-  hide_card = false
-  deal_card_to_dealer?(current_deck, dealer_hand, player_hand, hide_card)
-  round_winner = who_won?(player_hand, dealer_hand)
+  player_hand, hide_card = initial_deal(current_deck)
+  dealer_hand, = initial_deal(current_deck)
+  player_hand_value = hand_value(player_hand)
+  dealer_hand_value = hand_value(dealer_hand)
+  format_display_dealer_hand(dealer_hand, hide_card, dealer_hand_value)
+  display_player_hand(player_hand, player_hand_value)
+  player_hand_value, hide_card = deal_card_to_player?(current_deck,
+                                                      player_hand,
+                                                      player_hand_value)
+  dealer_hand_value = deal_card_to_dealer?(current_deck, dealer_hand,
+                                           dealer_hand_value, player_hand_value,
+                                           hide_card)
+  round_winner = who_won?(player_hand_value, dealer_hand_value)
   display_winner(round_winner)
   round_winner
 end
@@ -302,9 +315,11 @@ loop do
                                                 tie)
     score(player_win, dealer_win, tie)
     if player_win == 5
+      system 'clear'
       prompt("YOU WON THE MATCH!!!")
       break
     elsif dealer_win == 5
+      system 'clear'
       prompt("You lost the match...so sad :(")
       break
     end
