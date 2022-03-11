@@ -1,4 +1,3 @@
-require 'pry'
 require 'yaml'
 
 MESSAGES = YAML.load_file('21_messages.yml')
@@ -21,7 +20,6 @@ DECK = { 'Spades': [{ '2': 2 }, { '3': 3 }, { '4': 4 }, { '5': 5 },
 
 MAX_PLAYABLE_VALUE = 21
 DEALER_LIMIT = 17
-CHOICE = %w(HIT STAY H S)
 HIT = %w(HIT H)
 STAY = %w(STAY S)
 
@@ -42,10 +40,17 @@ def prompt(message)
   puts "=> #{message}"
 end
 
+def blank_line(num)
+  num.times { puts "" }
+end
+
+def clear
+  system 'clear'
+end
+
 def welcome
   puts "            <-<-<->->->     #{MESSAGES['welcome']}     <-<-<->->->"
-  puts ""
-  puts ""
+  blank_line(2)
   prompt("If you would like to learn the rules of the game type 'rules'")
   prompt("Otherwise hit any key to continue")
   rules
@@ -61,10 +66,10 @@ def rules
   if choice == 'rules' || choice == 'r'
     puts MESSAGES['rules']
     sleep 2.5
-    puts ""
+    blank_line(1)
     hit_any_key_to_continue
   end
-  system 'clear'
+  clear
   prompt("The first player to win 5 games takes the match!")
   sleep 1
 end
@@ -116,7 +121,7 @@ def display_dealer_hand(_hand, hide_card, string, value)
   prompt(string)
   prompt(MESSAGES['dealer'] + "#{value} points.") if !hide_card
   prompt("The dealer busted!") if bust?(value)
-  puts ""
+  blank_line(1)
 end
 
 def display_winner(winner)
@@ -126,7 +131,7 @@ def display_winner(winner)
 end
 
 def score(player, dealer, draw)
-  puts ""
+  blank_line(1)
   puts "         Match Score"
   puts '==========================='
   puts " Player | Dealer | Ties "
@@ -134,7 +139,7 @@ def score(player, dealer, draw)
   puts "   #{player}    |    #{dealer}  |   #{draw}"
   puts ""
   hit_any_key_to_continue
-  system 'clear'
+  clear
 end
 # =======================================
 # Game Choice Methods
@@ -178,7 +183,7 @@ def deal_card_to_dealer?(deck, d_hand, d_value, p_value, hide_card)
 end
 
 def chose_to_stay
-  system 'clear'
+  clear
   prompt("You chose to stay...it is now the dealers turn")
   sleep 1.5
 end
@@ -315,11 +320,11 @@ loop do
                                                 tie)
     score(player_win, dealer_win, tie)
     if player_win == 5
-      system 'clear'
+      clear
       prompt("YOU WON THE MATCH!!!")
       break
     elsif dealer_win == 5
-      system 'clear'
+      clear
       prompt("You lost the match...so sad :(")
       break
     end
